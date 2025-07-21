@@ -2,15 +2,27 @@ from flask import Flask, jsonify, request
 import phonenumbers
 from phonenumbers import carrier
 from phonenumbers.phonenumberutil import number_type
+import re
 
 app = Flask(__name__)
 
 @app.route('/check-mobile', methods=['POST'])
+def format_phone_number(number: str) -> str:
+    number = re.sub(r"[ \-\(\)]", "", number)
+
+    if number.startswith("+"):
+        return number
+    else:
+        if number.startswith("0"):
+            return "+972" + number[1:]
+        else:
+            return "+972" + number
+
 def check_mobile():
     try:
         data = request.get_json(force=True)
-        phone_number = data.get('phone_number')
-        
+        phone_number = format_phone_number(data.get('phone_number'))
+
         if not phone_number:
             return jsonify({'error': 'Phone number parameter is required'}), 400
         
