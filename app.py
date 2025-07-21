@@ -2,8 +2,25 @@ from flask import Flask, jsonify, request
 import phonenumbers
 from phonenumbers import carrier
 from phonenumbers.phonenumberutil import number_type
+import re
 
 app = Flask(__name__)
+
+def format_phone_number(number: str) -> str:
+    # ניקוי רווחים, מקפים וסוגריים
+    number = re.sub(r"[ \-\(\)]", "", number)
+
+    if number.startswith("+"):
+        # כבר קידומת בינלאומית, להשאיר כמו שהוא
+        return number
+    else:
+        # מספר בלי קידומת
+        # אם מתחיל ב-0, מסירים את ה-0 ומוסיפים +972
+        if number.startswith("0"):
+            return "+972" + number[1:]
+        else:
+            # במקרה ומספר בלי קידומת ובלי 0 בהתחלה, פשוט מוסיפים +972
+            return "+972" + number
 
 @app.route('/check-mobile', methods=['GET'])
 def check_mobile():
@@ -19,27 +36,16 @@ def check_mobile():
         
         original_number = number
         
-        # If number starts with +, use it as is (already international format)
-        if number.startswith('+'):
-            # Keep the number as is - it's already in international format
-            pass
-        elif number.startswith('00'):
-            # International format with 00 prefix - keep as is
-            pass
-        else:
-            # No international prefix, assume Israeli number
-            # Remove leading 0 if present and add Israeli prefix
-            if number.startswith('0'):
-                number = number[1:]
-            number = '+972' + number
+        # Format the phone number using the provided logic
+        formatted_number = format_phone_number(number)
         
         # Parse and check if the number is mobile
-        parsed_number = phonenumbers.parse(number)
+        parsed_number = phonenumbers.parse(formatted_number)
         is_mobile = carrier._is_mobile(number_type(parsed_number))
         
         return jsonify({
             'original_number': original_number,
-            'formatted_number': number,
+            'formatted_number': formatted_number,
             'is_mobile': is_mobile,
             'success': True
         })
