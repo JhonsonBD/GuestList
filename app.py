@@ -25,6 +25,8 @@ def check_mobile():
             if number.startswith('0'):
                 number = number[1:]
             number = '+972' + number
+        # If it starts with +, use it as is (international number)
+        # If it starts with 00, it's also international format
         
         # Parse and check if the number is mobile
         parsed_number = phonenumbers.parse(number)
