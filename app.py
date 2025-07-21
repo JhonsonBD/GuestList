@@ -11,12 +11,17 @@ def is_mobile():
         return jsonify({"error": "Missing 'number' parameter"}), 400
 
     try:
-        parsed = phonenumbers.parse(number)
+        if number.startswith('+'):
+            parsed = phonenumbers.parse(number)  # קידומת בינלאומית כבר כלולה
+        else:
+            parsed = phonenumbers.parse(number, "IL")  # ברירת מחדל: ישראל
+
         type_of_number = number_type(parsed)
         is_mobile = type_of_number in (PhoneNumberType.MOBILE, PhoneNumberType.FIXED_LINE_OR_MOBILE)
 
         return jsonify({
-            "number": number,
+            "input_number": number,
+            "formatted_number": phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164),
             "is_mobile": is_mobile,
             "type": PhoneNumberType._VALUES_TO_NAMES.get(type_of_number)
         })
