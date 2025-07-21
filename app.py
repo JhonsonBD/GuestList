@@ -19,14 +19,19 @@ def check_mobile():
         
         original_number = number
         
-        # If number doesn't start with + or country code, assume Israeli number
-        if not number.startswith('+') and not number.startswith('00'):
+        # If number starts with +, use it as is (already international format)
+        if number.startswith('+'):
+            # Keep the number as is - it's already in international format
+            pass
+        elif number.startswith('00'):
+            # International format with 00 prefix - keep as is
+            pass
+        else:
+            # No international prefix, assume Israeli number
             # Remove leading 0 if present and add Israeli prefix
             if number.startswith('0'):
                 number = number[1:]
             number = '+972' + number
-        # If it starts with +, use it as is (international number)
-        # If it starts with 00, it's also international format
         
         # Parse and check if the number is mobile
         parsed_number = phonenumbers.parse(number)
