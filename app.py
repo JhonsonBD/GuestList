@@ -33,6 +33,7 @@ def check_mobile():
 
         return jsonify({
             'number': phone_number,
+            'parsed': parsed,
             'is_mobile': is_mobile
         })
 
