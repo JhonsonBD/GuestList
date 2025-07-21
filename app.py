@@ -25,7 +25,7 @@ def is_mobile():
             "input_number": number,
             "formatted_number": phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164),
             "is_mobile": is_mobile,
-            "type": PhoneNumberType(num_type).name
+            "type": num_type.name  # 👈 זה השינוי החשוב
         })
 
     except NumberParseException as e:
