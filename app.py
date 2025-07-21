@@ -3,10 +3,14 @@ import phonenumbers
 from phonenumbers import carrier
 from phonenumbers.phonenumberutil import number_type
 import re
+from urllib.parse import unquote
 
 app = Flask(__name__)
 
 def format_phone_number(number: str) -> str:
+    # Handle URL encoding - decode first
+    number = unquote(number)
+    
     # ניקוי רווחים, מקפים וסוגריים
     number = re.sub(r"[ \-\(\)]", "", number)
 
