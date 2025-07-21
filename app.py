@@ -5,34 +5,22 @@ from phonenumbers.phonenumberutil import number_type
 
 app = Flask(__name__)
 
-@app.route('/check-mobile', methods=['GET'])
+@app.route('/check-mobile', methods=['POST'])
 def check_mobile():
     try:
-        # Get phone number from query parameter
-        number = request.args.get('number')
+        data = request.get_json(force=True)
+        phone_number = data.get('phone_number')
         
-        if not number:
-            return jsonify({
-                'error': 'Phone number parameter is required',
-                'usage': 'GET /check-mobile?number=+972547773320'
-            }), 400
+        if not phone_number:
+            return jsonify({'error': 'Phone number parameter is required'}), 400
         
-        # Check if the number is mobile
-        check = carrier._is_mobile(number_type(phonenumbers.parse(number)))
+        check = carrier._is_mobile(number_type(phonenumbers.parse(phone_number)))
         
         return jsonify({
-            'number': number,
-            'is_mobile': check,
-            'success': True
+            'number': phone_number,
+            'is_mobile': check
         })
         
-    except phonenumbers.phonenumberutil.NumberParseException as e:
-        return jsonify({
-            'error': f'Invalid phone number: {str(e)}',
-            'number': number if 'number' in locals() else None,
-            'success': False
-        }), 400
-    
     except Exception as e:
         return jsonify({
             'error': f'An error occurred: {str(e)}',
