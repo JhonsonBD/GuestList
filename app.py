@@ -32,8 +32,8 @@ def check_mobile():
         is_mobile = carrier._is_mobile(number_type(parsed))
 
         return jsonify({
+            'input': raw_number,
             'number': phone_number,
-            'parsed': parsed,
             'is_mobile': is_mobile
         })
 
