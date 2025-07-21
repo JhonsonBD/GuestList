@@ -6,7 +6,6 @@ import re
 
 app = Flask(__name__)
 
-@app.route('/check-mobile', methods=['POST'])
 def format_phone_number(number: str) -> str:
     number = re.sub(r"[ \-\(\)]", "", number)
 
@@ -18,21 +17,25 @@ def format_phone_number(number: str) -> str:
         else:
             return "+972" + number
 
+@app.route('/check-mobile', methods=['POST'])
 def check_mobile():
     try:
         data = request.get_json(force=True)
-        phone_number = format_phone_number(data.get('phone_number'))
+        raw_number = data.get('phone_number')
 
-        if not phone_number:
+        if not raw_number:
             return jsonify({'error': 'Phone number parameter is required'}), 400
-        
-        check = carrier._is_mobile(number_type(phonenumbers.parse(phone_number)))
-        
+
+        phone_number = format_phone_number(raw_number)
+        parsed = phonenumbers.parse(phone_number)
+
+        is_mobile = carrier._is_mobile(number_type(parsed))
+
         return jsonify({
             'number': phone_number,
-            'is_mobile': check
+            'is_mobile': is_mobile
         })
-        
+
     except Exception as e:
         return jsonify({
             'error': f'An error occurred: {str(e)}',
