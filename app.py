@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.route('/test')
 def home():
-    return 'Hello from Flask on Render!'
+    return 'Test, let's see if it works.'
 
 if __name__ == '__main__':
     app.run()
