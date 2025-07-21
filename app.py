@@ -15,7 +15,7 @@ def format_phone_number(number: str) -> str:
     number = re.sub(r"[ \-\(\)]", "", number)
 
     if number.startswith("+"):
-        # כבר קידומת בינלאומית, להשאיר כמו שהוא
+        # כבר קידומת בינלאומית, להשאיר כמו שהוא (לא מוסיפים כלום)
         return number
     else:
         # מספר בלי קידומת
@@ -38,13 +38,19 @@ def check_mobile():
                 'usage': 'GET /check-mobile?number=0547773320'
             }), 400
         
-        original_number = number
+        original_number = number.strip()  # מסירים רווחים בקצה
         
         # Format the phone number using the provided logic
-        formatted_number = format_phone_number(number)
+        formatted_number = format_phone_number(original_number)
         
         # Parse and check if the number is mobile
-        parsed_number = phonenumbers.parse(formatted_number)
+        # אם המספר מתחיל ב + - לא צריך להגדיר קוד מדינה
+        if formatted_number.startswith("+"):
+            parsed_number = phonenumbers.parse(formatted_number, None)
+        else:
+            # בהנחה שהפורמט הוא ישראלי כברירת מחדל
+            parsed_number = phonenumbers.parse(formatted_number, "IL")
+        
         is_mobile = carrier._is_mobile(number_type(parsed_number))
         
         return jsonify({
