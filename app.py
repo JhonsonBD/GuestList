@@ -62,39 +62,43 @@ def index():
 @app.route('/convert', methods=['POST'])
 def convert_xlsx_to_csv():
     try:
-        # Check if file was uploaded
         if 'file' not in request.files:
             return jsonify({'error': 'No file uploaded'}), 400
         
         file = request.files['file']
-        
-        # Check if file was selected
+
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
+        
+        # Load the full Excel workbook to access specific cells
+        excel_bytes = file.read()
+        file.seek(0)  # Reset file pointer for pandas
+        xls = pd.ExcelFile(io.BytesIO(excel_bytes))
+        sheet_name = xls.sheet_names[0]  # Read first sheet
 
+        # Load workbook with openpyxl to check cell GL1
+        import openpyxl
+        workbook = openpyxl.load_workbook(filename=io.BytesIO(excel_bytes), data_only=True)
+        sheet = workbook[sheet_name]
+        
+        # Check if cell GL1 contains "guestlistformat"
         if sheet['GL1'].value != 'guestlistformat':
             return jsonify({'error': 'Please use the correct Excel format'}), 400
         
-        # Read the Excel file directly from memory
-        # Use dtype=str for phone columns to preserve leading zeros
-        df = pd.read_excel(file, dtype={'טלפון האורח': str})
-        
-        # Check if phone column exists and format phone numbers
+        # Now use pandas to process the Excel file
+        df = pd.read_excel(io.BytesIO(excel_bytes), dtype={'טלפון האורח': str})
+
         phone_column = 'טלפון האורח'
         if phone_column in df.columns:
-            # Apply phone formatting to create new column
             df['טלפון פורמט'] = df[phone_column].apply(format_phone_number)
-        
-        # Convert DataFrame to CSV string
+
         csv_buffer = io.StringIO()
         df.to_csv(csv_buffer, index=False)
         csv_content = csv_buffer.getvalue()
-        
-        # Parse CSV content into list of dictionaries for JSON response
+
         csv_reader = csv.DictReader(io.StringIO(csv_content))
         csv_data = list(csv_reader)
-        
-        # Return JSON response with CSV data
+
         return jsonify({
             'success': True,
             'filename': secure_filename(file.filename),
@@ -104,9 +108,10 @@ def convert_xlsx_to_csv():
             'csv_string': csv_content,
             'phone_formatted': phone_column in df.columns
         })
-        
+
     except Exception as e:
         return jsonify({'error': f'Error processing file: {str(e)}'}), 500
+
 
 @app.route('/check-mobile', methods=['POST'])
 def check_mobile():
