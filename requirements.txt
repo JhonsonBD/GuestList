@@ -1,3 +1,6 @@
 Flask
 gunicorn
 phonenumbers
+pandas
+openpyxl
+Werkzeug
