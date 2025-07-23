@@ -71,6 +71,9 @@ def convert_xlsx_to_csv():
         # Check if file was selected
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
+
+        if sheet['GL1'].value != 'guestlistformat':
+            return jsonify({'error': 'Please use the correct Excel format'}), 400
         
         # Read the Excel file directly from memory
         # Use dtype=str for phone columns to preserve leading zeros
