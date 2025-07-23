@@ -33,6 +33,7 @@ def format_phone_number(number: str) -> str:
         else:
             return "+972" + number
 
+
 @app.route('/convert', methods=['POST'])
 def convert_xlsx_to_csv():
     try:
