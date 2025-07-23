@@ -83,7 +83,7 @@ def convert_xlsx_to_csv():
         sheet = workbook[sheet_name]
         
         # Check if cell GL1 contains "guestlistformat"
-        if sheet['GL1'].value != 'guestlistformat':
+        if sheet['A1'].value != 'שם האורח' or sheet['B1'].value != 'טלפון האורח' or sheet['C1'].value != 'כמות מגיעים' or sheet['D1'].value != 'מספר שולחן' or sheet['E1'].value != 'הערות':
             return jsonify({'error': 'Please use the correct Excel format'}), 400
         
         # Now use pandas to process the Excel file
