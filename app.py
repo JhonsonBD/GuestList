@@ -20,11 +20,16 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def format_phone_number(number: str) -> str:
-    if pd.isna(number) or number == '':
+    if pd.isna(number) or number == '' or str(number).lower() == 'nan':
         return ''
     
     # Convert to string and apply your formatting logic
     number = str(number).strip()
+    
+    # Handle the case where leading zero was lost - add it back for Israeli numbers
+    if len(number) == 9 and number.isdigit() and number.startswith('5'):
+        number = '0' + number
+    
     number = re.sub(r"[ \-\(\)]", "", number)
     
     if number.startswith("+"):
@@ -35,6 +40,24 @@ def format_phone_number(number: str) -> str:
         else:
             return "+972" + number
 
+@app.route('/')
+def index():
+    return '''
+    <!doctype html>
+    <html>
+    <head>
+        <title>XLSX to CSV Converter</title>
+    </head>
+    <body>
+        <h2>Upload XLSX File to Convert to CSV</h2>
+        <form action="/convert" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".xlsx,.xls" required>
+            <br><br>
+            <input type="submit" value="Convert to CSV">
+        </form>
+    </body>
+    </html>
+    '''
 
 @app.route('/convert', methods=['POST'])
 def convert_xlsx_to_csv():
@@ -50,7 +73,8 @@ def convert_xlsx_to_csv():
             return jsonify({'error': 'No file selected'}), 400
         
         # Read the Excel file directly from memory
-        df = pd.read_excel(file)
+        # Use dtype=str for phone columns to preserve leading zeros
+        df = pd.read_excel(file, dtype={'טלפון האורח': str})
         
         # Check if phone column exists and format phone numbers
         phone_column = 'טלפון האורח'
@@ -104,5 +128,9 @@ def check_mobile():
             'success': False
         }), 500
 
+@app.route('/health')
+def health_check():
+    return jsonify({'status': 'healthy'})
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
