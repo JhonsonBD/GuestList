@@ -8,6 +8,8 @@ import io
 import csv
 from werkzeug.utils import secure_filename
 import os
+import openpyxl
+
 
 app = Flask(__name__)
 
@@ -77,7 +79,6 @@ def convert_xlsx_to_csv():
         sheet_name = xls.sheet_names[0]  # Read first sheet
 
         # Load workbook with openpyxl to check cell GL1
-        import openpyxl
         workbook = openpyxl.load_workbook(filename=io.BytesIO(excel_bytes), data_only=True)
         sheet = workbook[sheet_name]
         
