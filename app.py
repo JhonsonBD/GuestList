@@ -42,24 +42,6 @@ def format_phone_number(number: str) -> str:
         else:
             return "+972" + number
 
-@app.route('/')
-def index():
-    return '''
-    <!doctype html>
-    <html>
-    <head>
-        <title>XLSX to CSV Converter</title>
-    </head>
-    <body>
-        <h2>Upload XLSX File to Convert to CSV</h2>
-        <form action="/convert" method="post" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".xlsx,.xls" required>
-            <br><br>
-            <input type="submit" value="Convert to CSV">
-        </form>
-    </body>
-    </html>
-    '''
 
 @app.route('/convert', methods=['POST'])
 def convert_xlsx_to_csv():
