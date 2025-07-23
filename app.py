@@ -9,22 +9,24 @@ import csv
 from werkzeug.utils import secure_filename
 import os
 
-
 app = Flask(__name__)
 
 # Configure upload settings
 UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Create upload folder if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-
 def format_phone_number(number: str) -> str:
+    if pd.isna(number) or number == '':
+        return ''
+    
+    # Convert to string and apply your formatting logic
+    number = str(number).strip()
     number = re.sub(r"[ \-\(\)]", "", number)
-
+    
     if number.startswith("+"):
         return number
     else:
@@ -50,45 +52,52 @@ def convert_xlsx_to_csv():
         # Read the Excel file directly from memory
         df = pd.read_excel(file)
         
+        # Check if phone column exists and format phone numbers
+        phone_column = 'טלפון האורח'
+        if phone_column in df.columns:
+            # Apply phone formatting to create new column
+            df['טלפון פורמט'] = df[phone_column].apply(format_phone_number)
+        
         # Convert DataFrame to CSV string
         csv_buffer = io.StringIO()
         df.to_csv(csv_buffer, index=False)
         csv_content = csv_buffer.getvalue()
         
-        # Create response with CSV file
-        output_filename = secure_filename(file.filename).replace('.xlsx', '.csv').replace('.xls', '.csv')
+        # Parse CSV content into list of dictionaries for JSON response
+        csv_reader = csv.DictReader(io.StringIO(csv_content))
+        csv_data = list(csv_reader)
         
-        response = make_response(csv_content)
-        response.headers['Content-Type'] = 'text/csv'
-        response.headers['Content-Disposition'] = f'attachment; filename={output_filename}'
-        
-        return response
+        # Return JSON response with CSV data
+        return jsonify({
+            'success': True,
+            'filename': secure_filename(file.filename),
+            'rows': len(csv_data),
+            'columns': list(csv_data[0].keys()) if csv_data else [],
+            'data': csv_data,
+            'csv_string': csv_content,
+            'phone_formatted': phone_column in df.columns
+        })
         
     except Exception as e:
         return jsonify({'error': f'Error processing file: {str(e)}'}), 500
-####################################################
-
 
 @app.route('/check-mobile', methods=['POST'])
 def check_mobile():
     try:
         data = request.get_json(force=True)
         raw_number = data.get('phone_number')
-
         if not raw_number:
             return jsonify({'error': 'Phone number parameter is required'}), 400
-
+        
         phone_number = format_phone_number(raw_number)
         parsed = phonenumbers.parse(phone_number)
-
         is_mobile = carrier._is_mobile(number_type(parsed))
-
+        
         return jsonify({
             'input': raw_number,
             'number': phone_number,
             'is_mobile': is_mobile
         })
-
     except Exception as e:
         return jsonify({
             'error': f'An error occurred: {str(e)}',
